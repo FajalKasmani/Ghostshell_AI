@@ -39,7 +39,7 @@ def get_ai_response(command, history_str, api_key):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Terminal History:\n{history_str}\n\nHacker Input:\nroot@server:~# {command}"}
             ],
-            model="llama3-70b-8192", # Using a strong model for better simulation
+            model="llama-3.1-8b-instant", # Using faster model to avoid rate limits
             temperature=0.1,
             max_tokens=500,
         )

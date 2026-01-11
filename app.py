@@ -25,8 +25,14 @@ if "history" not in st.session_state:
 if "logs" not in st.session_state:
     st.session_state.logs = []
 if "packets" not in st.session_state:
-    # Fake packet data for the "Deep Packet Inspection" table
-    st.session_state.packets = pd.DataFrame(columns=["Timestamp", "Source IP", "Protocol", "Payload", "Flag"])
+    # Initial fake packet data for the "Deep Packet Inspection" table
+    st.session_state.packets = pd.DataFrame([
+        {"Timestamp": "09:25:01.234", "Source IP": "192.168.1.105", "Protocol": "SSH", "Payload": "LEN=512bits", "Flag": "SYN"},
+        {"Timestamp": "09:25:02.456", "Source IP": "10.0.0.55", "Protocol": "TCP", "Payload": "LEN=1024bits", "Flag": "PSH, ACK"},
+        {"Timestamp": "09:25:03.789", "Source IP": "172.16.0.23", "Protocol": "HTTP", "Payload": "LEN=2048bits", "Flag": "ACK"},
+        {"Timestamp": "09:25:04.012", "Source IP": "192.168.45.21", "Protocol": "FTP", "Payload": "LEN=256bits", "Flag": "SYN, ACK"},
+        {"Timestamp": "09:25:05.345", "Source IP": "10.10.10.10", "Protocol": "SSH", "Payload": "LEN=768bits", "Flag": "PSH"},
+    ])
 
 # --- CUSTOM CSS (ANIMATIONS & CYBERPUNK THEME) ---
 st.markdown("""
@@ -116,7 +122,16 @@ st.markdown("<h1 class='glitch-text'>👻 GhostShell v3.0 // ACTIVE DEFENSE</h1>
 col_hacker, _, col_admin = st.columns([1, 0.05, 1.2])
 
 with col_hacker:
-    st.markdown("### 💀 TERMINAL INTERFACE_")
+    col_title, col_btn = st.columns([3, 1])
+    with col_title:
+        st.markdown("### 💀 TERMINAL INTERFACE_")
+    with col_btn:
+        if st.button("🗑️ Clear", key="clear_btn"):
+            st.session_state.history = []
+            st.session_state.logs = []
+            st.session_state.packets = pd.DataFrame(columns=["Timestamp", "Source IP", "Protocol", "Payload", "Flag"])
+            st.rerun()
+    
     terminal = st.container(height=500, border=True)
     with terminal:
         for cmd, out in st.session_state.history[-10:]:
@@ -126,7 +141,7 @@ with col_hacker:
     command = st.text_input("root@ghostshell:~#", key="cmd_input")
     
     if command:
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = os.getenv("")
         # Generate Log
         log = get_admin_logs(command)
         log['timestamp'] = datetime.now().strftime("%H:%M:%S")
@@ -160,42 +175,18 @@ with col_admin:
     m2.metric("Threat", risk)
     m3.metric("Uptime", "99.9%")
     m4.metric("Decoys", "24/24")
-
-    # Map
-    st.markdown("#### 🌍 GEO-THREAD ORIGIN")
-    map_data = pd.DataFrame(
-        np.random.randn(20, 2) / [50, 50] + [37.76, -122.4],
-        columns=['lat', 'lon'])
     
-    st.pydeck_chart(pdk.Deck(
-        map_style="mapbox://styles/mapbox/dark-v9",
-        initial_view_state=pdk.ViewState(latitude=37.76, longitude=-122.4, zoom=3, pitch=40),
-        layers=[
-            pdk.Layer(
-                "ScatterplotLayer",
-                map_data,
-                get_position='[lon, lat]',
-                get_color='[0, 255, 65, 100]',
-                get_radius=200000,
-            ),
-             pdk.Layer(
-                "ArcLayer",
-                data=pd.DataFrame([{
-                    "source": [-122.4194, 37.7749], 
-                    "target": [77.2090, 28.6139]
-                }]),
-                get_source_position="source",
-                get_target_position="target",
-                get_source_color=[0, 255, 65],
-                get_target_color=[255, 0, 85],
-                get_width=5,
-            )
-        ],
-    ))
+    # Simple log display instead of map
+    st.markdown("#### 📋 RECENT ALERTS")
+    if st.session_state.logs:
+        for log in st.session_state.logs[:5]:
+            st.markdown(f"**[{log.get('timestamp', '--')}]** `{log.get('command', 'N/A')}` - {log.get('risk', 'LOW')}")
+    else:
+        st.info("No alerts yet. Enter commands in terminal.")
 
 # --- SECTION 2: DEEP PACKET INSPECTION (THE "LONG" PART) ---
 st.markdown("---")
-st.markdown("### � DEEP PACKET INSPECTION (DPI)")
+st.markdown("### 📡 DEEP PACKET INSPECTION (DPI)")
 
 dpi_col1, dpi_col2 = st.columns([2, 1])
 
